@@ -4,10 +4,10 @@ on: [push]
 jobs:
   tests:
     name: Tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:11
+        image: postgres:12
         env:
           POSTGRES_USER: postgres
           POSTGRES_DB: hitta_ka_test
@@ -42,4 +42,17 @@ jobs:
           bin/rails db:setup
 
       - name: Run tests
-        run: bundle exec rspec --profile 10 --format progress
+        run: bundle exec rspec --profile 10 --format RspecJunitFormatter --out rspec.xml --format documentation
+
+      - name: Set Blinka tag
+        run: echo blinka_webhooks > ./blinka_tag
+
+      - name: Blinka - Archive
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: blinka
+          path: |
+            ./rspec.xml
+            ./tmp/screenshots
+            ./blinka_tag
